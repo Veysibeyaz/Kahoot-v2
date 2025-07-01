@@ -442,7 +442,7 @@ const GamePage = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameCode}/next-question`, {
+      const response = await fetch(`http://localhost:5000/api/games/${gameCode}/nextquestion`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -379,7 +379,7 @@ router.post('/:gameCode/answer', authMiddleware, async (req, res) => {
 });
 
 // --- Sonraki Soruya Geçme ---
-router.post('/:gameCode/next-question', authMiddleware, async (req, res) => {
+router.post('/:gameCode/nextquestion', authMiddleware, async (req, res) => {
     const { gameCode } = req.params;
     const userId = req.user.id;
 
