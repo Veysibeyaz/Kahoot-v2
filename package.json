@@ -1,0 +1,9 @@
+{
+  "name": "kahoot-v2",
+  "version": "1.0.0",
+  "description": "Interactive Quiz Platform (Kahoot Clone)",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "vercel-build": "cd frontend && npm install && npm run build"
+  }
+}

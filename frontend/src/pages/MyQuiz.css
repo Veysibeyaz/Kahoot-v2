@@ -1,0 +1,227 @@
+/* src/pages/MyQuiz.css */
+/* Font Awesome importunu ana App.css veya index.css dosyanızda yapmanız daha iyi olabilir.
+   Eğer zaten yapılmışsa bu satıra gerek yok. */
+/* @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'); */
+
+.myquiz-container {
+  max-width: 900px; /* CreateQuizPage ile aynı genişlik */
+  margin: 30px auto;
+  padding: 20px 30px 40px 30px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  color: #343a40;
+}
+
+.myquiz-header { /* CreateQuizPage header stiliyle aynı */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.myquiz-header h2 { /* CreateQuizPage h1 stiliyle aynı font boyutu ve ağırlık */
+  font-size: 2rem;
+  color: #343a40;
+  font-weight: 600;
+  margin: 0;
+}
+
+.loading-spinner-myquiz {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0d6efd; /* Ana renk */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message-container { /* Sadece hata mesajı gösterilirken kullanılan container */
+    text-align: center;
+    padding: 20px;
+}
+
+.error-message {
+  color: #d8000c; /* Kırmızı hata rengi */
+  background-color: #ffdddd; /* Açık kırmızı arka plan */
+  border: 1px solid #d8000c;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: left; /* Hata mesajları genelde sola yaslı olur */
+}
+
+.no-quizzes-message {
+  text-align: center;
+  padding: 30px 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.no-quizzes-message .empty-icon {
+  font-size: 3rem;
+  color: #6c757d;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.no-quizzes-message p {
+  font-size: 1.1rem;
+  color: #495057;
+  margin-bottom: 20px;
+}
+
+.quiz-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 25px;
+}
+
+.quiz-item {
+  background-color: #ffffff;
+  padding: 18px 22px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, border-left 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid transparent;
+}
+
+.quiz-item:hover {
+  background-color: #f8f9fa;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.quiz-item.selected {
+  background-color: #e9f5ff; /* CreateQuizPage'deki gibi bir seçili rengi */
+  border-left: 4px solid #0d6efd; /* Ana renkle vurgu */
+}
+
+.quiz-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quiz-title {
+  font-size: 1.15rem;
+  color: #212529;
+  font-weight: 500;
+}
+
+.quiz-details {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.quiz-actions { /* Eğer düzenle/sil butonları eklenecekse */
+  display: flex;
+  gap: 10px;
+}
+
+/* Genel Buton Stilleri (CreateQuizPage.css'ten uyarlandı) */
+.mq-button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* İkon ve metin arası boşluk */
+  text-decoration: none;
+}
+
+.mq-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.mq-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.mq-button:disabled {
+  background-color: #adb5bd;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
+  border-color: #adb5bd; /* Eğer border varsa */
+}
+
+/* Dashboard'a Dön Butonu (CreateQuizPage'deki Geri Dön butonuyla aynı stil) */
+.mq-button-outline {
+  background-color: transparent;
+  color: #6c757d; /* cq-button-outline-secondary rengi */
+  border: 1px solid #6c757d; /* cq-button-outline-secondary border'ı */
+}
+.mq-button-outline:hover:not(:disabled) {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Primary Buton (Örn: Yeni Quiz Oluştur, Oyun Başlat) */
+.mq-button-primary {
+  background-color: #0d6efd; /* cq-button-primary rengi */
+  color: white;
+}
+.mq-button-primary:hover:not(:disabled) {
+  background-color: #0b5ed7;
+}
+
+/* Secondary Buton (Örn: Başka Bir Quiz Oluştur) */
+.mq-button-secondary {
+  background-color: #6c757d; /* cq-button-secondary rengi */
+  color: white;
+}
+.mq-button-secondary:hover:not(:disabled) {
+  background-color: #5c636a;
+}
+
+/* Özel Butonlar için Ek Stiller */
+.start-game-button { /* Zaten mq-button ve mq-button-primary class'larını alıyor */
+  width: 100%;
+  padding-top: 12px; /* Genel padding'e ek veya onu override eder */
+  padding-bottom: 12px;
+  font-size: 1.1rem; /* Biraz daha büyük */
+  margin-top: 20px; /* Üstündeki listeyle boşluk */
+  margin-bottom: 15px; /* Altındaki butonla boşluk */
+}
+
+.create-new-quiz-button-alt { /* Zaten mq-button ve mq-button-secondary class'larını alıyor */
+  width: 100%;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 1.05rem;
+  margin-top: 10px;
+}
+
+/* İkon Butonları (Eğer eklenecekse) */
+.mq-button-icon {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+}
+.mq-button-icon.mq-button-danger { /* Örnek bir tehlike ikonu butonu */
+    color: #dc3545;
+    background-color: transparent;
+    border: 1px solid #dc3545;
+}
+.mq-button-icon.mq-button-danger:hover:not(:disabled) {
+    background-color: #dc3545;
+    color: white;
+}

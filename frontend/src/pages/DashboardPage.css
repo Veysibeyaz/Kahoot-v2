@@ -1,0 +1,423 @@
+/* src/pages/DashboardPage.css */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #e3e6ea;
+  color: #343a40;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Styles */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.dashboard-logo h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #20c997;
+  font-weight: 600;
+}
+
+.dashboard-user {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-greeting {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #343a40;
+}
+
+.logout-button {
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logout-button:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Main Content Styles */
+.dashboard-main {
+  max-width: 1200px; /* Sayfa içeriğinin maksimum genişliği */
+  margin: 0 auto; /* Sayfayı ortalamak için */
+  padding: 2rem 1.5rem; /* İç boşluklar */
+  flex: 1; /* Footer'ı aşağı itmek için */
+}
+
+/* Quick Access Cards Section - ÜSTTEKİ ÜÇ KART */
+.quick-access-section {
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Kart grubunu yatayda ortalar */
+  margin-bottom: 3rem; /* Alt bölümle arasında boşluk */
+}
+
+.quick-access-cards {
+  display: flex; /* Kartları yan yana dizer */
+  justify-content: center; /* Kartları kendi içinde ortalar */
+  align-items: stretch; /* Kartların yüksekliklerini eşitler */
+  gap: 2rem; /* Kartlar arası boşluk */
+  width: 100%;
+  max-width: 1100px; /* Üç kartın rahatça sığabileceği bir maksimum genişlik */
+}
+
+.quick-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem 1.5rem; /* İçeriğe göre padding ayarlandı */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  
+  flex: 1 1 0; /* Kartların esnek büyüme ve küçülme davranışı, temel boyut 0 */
+  min-width: 220px; /* Kartlar için minimum genişlik */
+  max-width: 320px; /* Kartlar için maksimum genişlik, bu değeri ayarlayarak sığmalarını sağlayın */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between; /* İçeriği dikeyde yayar */
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.quick-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.create-quiz-card .card-icon {
+  color: #20c997;
+}
+
+.join-game-card .card-icon {
+  color: #6f42c1;
+}
+
+.my-quizzes-card .card-icon {
+  color: #007bff;
+}
+
+.quick-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.4rem;
+  color: #343a40;
+  font-weight: 600;
+}
+
+.quick-card p {
+  margin: 0 0 1.5rem 0;
+  color: #6c757d;
+  font-size: 1rem;
+  line-height: 1.6;
+  flex-grow: 1; /* Paragrafın kalan alanı doldurmasını sağlar */
+}
+
+.card-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 1rem;
+  width: 100%;
+  margin-top: auto; /* Butonu kartın en altına iter */
+}
+
+.create-button {
+  background-color: #20c997;
+  color: white;
+}
+
+.create-button:hover {
+  background-color: #1baa80;
+}
+
+.my-quizzes-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.my-quizzes-button:hover {
+  background-color: #0069d9;
+}
+
+/* DashboardPage.css dosyanızdaki ilgili stilleri güncelleyin veya ekleyin */
+
+.game-pin-input {
+  flex: 1; /* Genişleyebilmesi için */
+  padding: 0.75rem; /* Dikey ve yatay iç boşluk */
+  font-size: 1rem; /* Butonla aynı font boyutu */
+  line-height: 1.5; /* Satır yüksekliği, içeriğin dikeyde ortalanmasına yardımcı olur */
+  color: #495057; /* Okunabilir metin rengi */
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da; /* Kenarlık */
+  
+  /* Butonla birleşik görünmesi için sağ kenarlığı kaldırıyoruz */
+  border-right: none; 
+  
+  border-radius: 6px 0 0 6px; /* Sol tarafı yuvarlak */
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  /* Yüksekliği padding, font-size ve border belirleyecek. box-sizing: border-box; global olarak ayarlı olmalı. */
+}
+
+.game-pin-input:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.join-game-button {
+  /* Dikey Yükseklik Ayarı: 
+     Input ile aynı dikey padding, font boyutu ve kenarlık kalınlığı kullanarak yüksekliği eşitliyoruz.
+  */
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  
+  /* Yatay Genişlik Ayarı: Butonun "çok uzun" olmaması için yatay padding'i azaltıyoruz. */
+  padding-left: 1rem;  /* Bu değeri artırıp azaltarak buton genişliğini ayarlayabilirsiniz */
+  padding-right: 1rem; /* Bu değeri artırıp azaltarak buton genişliğini ayarlayabilirsiniz */
+
+  font-size: 1rem; /* Input ile aynı font boyutu */
+  font-weight: 500; /* Kalınlık */
+  line-height: 1.5; /* Input ile aynı satır yüksekliği */
+  text-align: center;
+  
+  background-color: #6f42c1; /* Ana rengi */
+  color: white; /* Metin rengi */
+  
+  /* Input ile birleşik görünmesi ve yüksekliğin tam eşleşmesi için kenarlık ayarları */
+  border: 1px solid #ced4da; /* Input ile aynı kenarlık rengi ve kalınlığı */
+  /* Sol kenarlık, input'un kaldırılan sağ kenarlığının yerini alarak birleşik görünümü tamamlar. */
+
+  border-radius: 0 6px 6px 0; /* Sağ tarafı yuvarlak */
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, border-color .15s ease-in-out;
+  
+  /* Tarayıcı varsayılan margin'lerini sıfırlama */
+  margin: 0; 
+  white-space: nowrap; /* Buton metninin tek satırda kalmasını sağlar */
+}
+
+.join-game-button:hover {
+  background-color: #5a32a3; /* Hover rengi */
+  border-color: #5a32a3;
+}
+
+.join-game-button:focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, .5); /* #6f42c1 için focus rengi */
+}
+
+
+/* Bu grup içindeki elemanların dikeyde hizalanmasını ve esnemesini sağlar */
+.join-game-input-group {
+  display: flex;
+  width: 100%;
+  margin-top: auto; /* Kartın en altına iter */
+  align-items: stretch; /* Elemanların grup yüksekliğini doldurmasını sağlar, bu da yüksekliklerin eşitlenmesine yardımcı olur */
+}
+
+
+/* Features Section - ALTTAKİ DÖRT KART */
+.features-section {
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.features-section h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  color: #343a40;
+  margin-bottom: 2rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* İki sütunlu grid */
+  gap: 2rem; /* Kartlar arası boşluk */
+  max-width: 900px; /* Grid'in maksimum genişliği */
+  margin: 0 auto; /* Grid'i ortalamak için */
+}
+
+.feature-item {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  /* Renkler aşağıda ayrı ayrı tanımlanacak */
+}
+
+.feature-item:nth-child(1) .feature-icon { color: #20c997; }
+.feature-item:nth-child(2) .feature-icon { color: #007bff; }
+.feature-item:nth-child(3) .feature-icon { color: #fd7e14; }
+.feature-item:nth-child(4) .feature-icon { color: #6f42c1; }
+
+
+.feature-item h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.2rem;
+  color: #343a40;
+}
+
+.feature-item p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Footer */
+.dashboard-footer {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Loading State */
+.dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  gap: 1.5rem;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #20c997;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dashboard-loading p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) { /* Tablet ve altı */
+  .quick-access-cards {
+    flex-direction: column; /* Kartları alt alta dizer */
+    align-items: center; /* Ortalamak için */
+    gap: 1.5rem;
+  }
+  
+  .quick-card {
+    max-width: 450px; /* Alt alta dizildiğinde daha geniş olabilirler */
+    width: 90%; /* Ekran genişliğinin %90'ını kaplar */
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr; /* Özellik kartları tek sütun */
+    max-width: 450px; /* Tek sütunda daha dar olabilir */
+  }
+}
+
+@media (max-width: 768px) { /* Küçük tablet ve mobil */
+  .dashboard-header {
+    padding: 1rem;
+    flex-direction: column; /* Header içeriği alt alta gelebilir */
+    gap: 0.5rem;
+  }
+  .dashboard-logo h1 {
+    font-size: 1.3rem;
+  }
+  .dashboard-main {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 576px) { /* Mobil */
+  .dashboard-user {
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .user-info {
+    display: none; /* Mobilde kullanıcı bilgisi gizlenebilir */
+  }
+  
+ 
+  
+  .quick-card {
+    width: 100%; /* Tam genişlik */
+  }
+  .features-grid {
+    width: 100%;
+  }
+}
