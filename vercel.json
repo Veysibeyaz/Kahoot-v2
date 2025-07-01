@@ -3,43 +3,19 @@
   "builds": [
     {
       "src": "backend/src/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
+      "use": "@vercel/node"
     },
     {
-      "src": "frontend/build/**",
-      "use": "@vercel/static"
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/api/health",
-      "dest": "backend/src/index.js"
-    },
-    {
-      "src": "/api/auth/(.*)",
-      "dest": "backend/src/index.js"
-    },
-    {
-      "src": "/api/quizzes/(.*)",
-      "dest": "backend/src/index.js"
-    },
-    {
-      "src": "/api/users/(.*)",
-      "dest": "backend/src/index.js"
-    },
-    {
-      "src": "/api/games/(.*)",
-      "dest": "backend/src/index.js"
-    },
-    {
       "src": "/api/(.*)",
-      "dest": "backend/src/index.js"
-    },
-    {
-      "src": "/socket.io/(.*)",
       "dest": "backend/src/index.js"
     },
     {
@@ -49,5 +25,10 @@
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "backend/src/index.js": {
+      "maxDuration": 30
+    }
   }
 }

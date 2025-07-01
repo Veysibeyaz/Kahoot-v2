@@ -212,3 +212,5 @@ if (require.main === module && !isProduction) {
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 }
+// Export for Vercel - bu satır dosyanın en sonunda olmalı
+module.exports = app;

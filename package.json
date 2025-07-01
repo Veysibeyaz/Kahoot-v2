@@ -4,6 +4,13 @@
   "description": "Interactive Quiz Platform (Kahoot Clone)",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
-    "vercel-build": "cd frontend && npm install && npm run build"
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "dev-backend": "cd backend && npm run dev",
+    "dev-frontend": "cd frontend && npm start"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
