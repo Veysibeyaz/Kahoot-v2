@@ -1,8 +1,9 @@
-// src/pages/MyQuiz.js
+// frontend/src/pages/MyQuiz.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "./MyQuiz.css"; // MyQuiz için özel CSS dosyasını import ettiğinizden emin olun
+import { API_BASE_URL } from '../config/api';
+import "./MyQuiz.css";
 
 function MyQuiz() {
   const [quizzes, setQuizzes] = useState([]);
@@ -15,8 +16,7 @@ function MyQuiz() {
     const fetchQuizzes = async () => {
       setLoading(true);
       setError(null);
-      // Simüle edilmiş gecikme (isteğe bağlı, test için)
-      // await new Promise(resolve => setTimeout(resolve, 500));
+      
       const storedToken = localStorage.getItem("userToken");
       console.log("MyQuiz.js - useEffect - localStorage'dan okunan token:", storedToken);
 
@@ -24,14 +24,15 @@ function MyQuiz() {
         setError("Bu sayfayı görüntülemek için giriş yapmalısınız. Yönlendiriliyorsunuz...");
         localStorage.removeItem("userToken");
         setLoading(false);
-        setTimeout(() => navigate("/login"), 2500); // Yönlendirme süresi
+        setTimeout(() => navigate("/login"), 2500);
         return;
       }
 
       try {
-        const response = await axios.get("http://localhost:5000/api/quizzes", {
+        const response = await axios.get(`${API_BASE_URL}/quizzes`, {
           headers: { Authorization: `Bearer ${storedToken}` },
         });
+        
         console.log("MyQuiz.js - API Yanıt Verisi:", response.data);
         if (Array.isArray(response.data)) {
           setQuizzes(response.data);
@@ -45,7 +46,7 @@ function MyQuiz() {
         if (err.response) {
           console.error("MyQuiz.js - Hata Yanıt Verisi:", err.response.data);
           console.error("MyQuiz.js - Hata Yanıt Statüsü:", err.response.status);
-          if (err.response.status === 401 || err.response.status === 403) { // 403'ü de ekleyebiliriz
+          if (err.response.status === 401 || err.response.status === 403) {
             setError("Oturumunuz geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapın. Yönlendiriliyorsunuz...");
             localStorage.removeItem("userToken");
             setTimeout(() => navigate("/login"), 2500);
@@ -81,13 +82,14 @@ function MyQuiz() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/games", // API endpoint'inizi kontrol edin
+        `${API_BASE_URL}/games`,
         { quizId: selectedQuizId },
         { headers: { Authorization: `Bearer ${storedToken}` } }
       );
+      
       alert(`Oyun başarıyla başlatıldı! Oyun Kodu: ${response.data.gameCode}`);
-      // İsteğe bağlı: Oyun lobisine veya başka bir sayfaya yönlendirme
-      // navigate(`/lobby/${response.data.gameCode}`);
+      // Otomatik olarak lobby'ye yönlendir
+      navigate(`/lobby/${response.data.gameCode}`);
     } catch (err) {
       console.error("MyQuiz.js - Oyun başlatılırken hata:", err);
       let errorMessage = "Oyun başlatılamadı!";
@@ -97,7 +99,7 @@ function MyQuiz() {
           alert("Oturumunuz geçersiz veya süresi dolmuş. Lütfen tekrar giriş yapın.");
           localStorage.removeItem("userToken");
           navigate("/login");
-          return; // Hata sonrası devam etmemesi için
+          return;
         }
       } else if (err.request) {
         errorMessage += " Sunucuya ulaşılamadı.";
@@ -123,7 +125,7 @@ function MyQuiz() {
 
   if (error && error.includes("Yönlendiriliyorsunuz...")) {
     return (
-      <div className="myquiz-container error-message-container"> {/* Hata mesajı için ayrı bir container */}
+      <div className="myquiz-container error-message-container">
         <p>{error}</p>
       </div>
     );
@@ -165,15 +167,10 @@ function MyQuiz() {
                     <span className="quiz-title">{quiz.title}</span>
                     <span className="quiz-details">
                         {quiz.questions ? `${quiz.questions.length} Soru` : 'Detay yok'}
-                        {/* Oluşturulma tarihi eklenebilir:
-                         - {new Date(quiz.createdAt).toLocaleDateString()}
-                        */}
                     </span>
                 </div>
                 <div className="quiz-actions">
                   {/* Gelecekte eklenecek butonlar için yer tutucu */}
-                  {/* <button className="mq-button mq-button-icon"><i className="fas fa-edit"></i></button> */}
-                  {/* <button className="mq-button mq-button-icon mq-button-danger"><i className="fas fa-trash"></i></button> */}
                 </div>
               </li>
             ))}

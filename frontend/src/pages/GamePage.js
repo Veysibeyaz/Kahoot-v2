@@ -1,9 +1,8 @@
-// src/pages/GamePage.js - Updated with Audio Support
+// frontend/src/pages/GamePage.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
-import audioService from '../services/audioService';
-import AudioControls from '../components/AudioControls';
+import { API_BASE_URL, SOCKET_BASE_URL } from '../config/api';
 import io from 'socket.io-client';
 import './GamePage.css';
 
@@ -26,39 +25,16 @@ const GamePage = () => {
   const [error, setError] = useState(null);
   
   // Game flow states
-  const [gameState, setGameState] = useState('question'); // question, waiting, scoreboard, finished
+  const [gameState, setGameState] = useState('question');
   const [scoreboard, setScoreboard] = useState([]);
   const [correctAnswer, setCorrectAnswer] = useState(null);
-  const [answerResult, setAnswerResult] = useState(null); // correct, incorrect, timeout
+  const [answerResult, setAnswerResult] = useState(null);
   const [scoreGained, setScoreGained] = useState(0);
   const [nextQuestionTimer, setNextQuestionTimer] = useState(0);
   const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
   
   // Socket.IO state
   const [socket, setSocket] = useState(null);
-
-  // Audio initialization
-  useEffect(() => {
-    // User interaction ile audio context'i başlat
-    const initAudio = () => {
-      audioService.initAudioContext();
-      audioService.playBackgroundMusic();
-      
-      // Event listener'ı kaldır
-      document.removeEventListener('click', initAudio);
-      document.removeEventListener('keydown', initAudio);
-    };
-
-    // İlk user interaction'da audio'yu başlat
-    document.addEventListener('click', initAudio);
-    document.addEventListener('keydown', initAudio);
-
-    return () => {
-      document.removeEventListener('click', initAudio);
-      document.removeEventListener('keydown', initAudio);
-      audioService.stopBackgroundMusic();
-    };
-  }, []);
 
   // Authentication check
   useEffect(() => {
@@ -83,7 +59,7 @@ const GamePage = () => {
     if (!token || !gameCode) return;
 
     console.log('Connecting to Socket.IO...');
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(SOCKET_BASE_URL, {
       auth: { token },
       transports: ['websocket', 'polling']
     });
@@ -97,25 +73,18 @@ const GamePage = () => {
       console.log('Socket disconnected');
     });
 
-    // Oyuncu cevap verdi
     newSocket.on('answerSubmitted', (data) => {
       console.log('Someone answered:', data);
-      // UI güncellemesi yapılabilir (opsiyonel)
     });
 
-    // Scoreboard göster
     newSocket.on('showScoreboard', (data) => {
       console.log('Showing scoreboard:', data);
       setCorrectAnswer(data.correctAnswer);
       setScoreboard(data.scoreboard);
       setGameState('scoreboard');
       setNextQuestionTimer(4);
-      
-      // Scoreboard ses efekti
-      audioService.playNextQuestionSound();
     });
 
-    // Sonraki soru
     newSocket.on('nextQuestion', (data) => {
       console.log('Next question:', data);
       setCurrentQuestion(data.question);
@@ -127,20 +96,12 @@ const GamePage = () => {
       setScoreGained(0);
       setShowAnswerFeedback(false);
       setGameState('question');
-      
-      // Yeni soru ses efekti
-      audioService.playNextQuestionSound();
     });
 
-    // Oyun bitti
     newSocket.on('gameFinished', (data) => {
       console.log('Game finished:', data);
       setScoreboard(data.finalScoreboard);
       setGameState('finished');
-      
-      // Oyun bitiş ses efekti
-      audioService.playGameEndSound();
-      audioService.stopBackgroundMusic();
     });
 
     newSocket.on('connect_error', (error) => {
@@ -154,13 +115,13 @@ const GamePage = () => {
     };
   }, [token, gameCode]);
 
-  // Fallback polling (Socket.IO çalışmazsa)
+  // Fallback polling
   useEffect(() => {
     if (!token || !gameCode || gameState === 'finished' || socket?.connected) return;
 
     const pollGameState = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/games/${gameCode}`, {
+        const response = await fetch(`${API_BASE_URL}/games/${gameCode}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -169,16 +130,12 @@ const GamePage = () => {
         if (response.ok) {
           const data = await response.json();
           
-          // Oyun bitmiş mi?
           if (data.gameState === 'finished' && gameState !== 'finished') {
             setGameState('finished');
             fetchFinalScoreboard();
-            audioService.playGameEndSound();
-            audioService.stopBackgroundMusic();
             return;
           }
 
-          // Yeni soru var mı?
           if (data.currentQuestionIndex > questionIndex) {
             const newQuestion = data.quiz.questions[data.currentQuestionIndex];
             setCurrentQuestion(newQuestion);
@@ -190,13 +147,9 @@ const GamePage = () => {
             setScoreGained(0);
             setShowAnswerFeedback(false);
             setGameState('question');
-            
-            // Yeni soru ses efekti
-            audioService.playNextQuestionSound();
             console.log('New question received via polling:', newQuestion.questionText);
           }
 
-          // Waiting state'de scoreboard check
           if (gameState === 'waiting') {
             checkScoreboard();
           }
@@ -206,8 +159,7 @@ const GamePage = () => {
       }
     };
 
-    const intervalId = setInterval(pollGameState, 2000); // 2 saniyede bir kontrol
-    
+    const intervalId = setInterval(pollGameState, 2000);
     return () => clearInterval(intervalId);
   }, [token, gameCode, gameState, questionIndex, socket?.connected]);
 
@@ -233,7 +185,7 @@ const GamePage = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameCode}`, {
+      const response = await fetch(`${API_BASE_URL}/games/${gameCode}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -251,22 +203,14 @@ const GamePage = () => {
       const data = await response.json();
       setGameData(data);
       
-      // Oyun durumunu kontrol et
       if (data.gameState === 'finished') {
         setGameState('finished');
         setScoreboard(data.scoreboard || []);
-        audioService.playGameEndSound();
-        audioService.stopBackgroundMusic();
       } else if (data.quiz && data.quiz.questions && data.quiz.questions.length > 0) {
         const currentQ = data.quiz.questions[data.currentQuestionIndex || 0];
         setCurrentQuestion(currentQ);
         setQuestionIndex(data.currentQuestionIndex || 0);
         setTimeLeft(currentQ?.timeLimit || 15);
-        
-        // İlk soru başladığında oyun başlama sesi
-        if ((data.currentQuestionIndex || 0) === 0) {
-          audioService.playGameStartSound();
-        }
       }
       
       setError(null);
@@ -278,12 +222,12 @@ const GamePage = () => {
     }
   }, [gameCode, token, navigate]);
 
-  // Scoreboard kontrolü için yeni fonksiyon
+  // Scoreboard kontrolü
   const checkScoreboard = useCallback(async () => {
     if (!token || gameState !== 'waiting') return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameCode}/scoreboard`, {
+      const response = await fetch(`${API_BASE_URL}/games/${gameCode}/scoreboard`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -292,12 +236,10 @@ const GamePage = () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Eğer tüm oyuncular cevapladıysa scoreboard'ı göster
         if (data.allAnswered && data.scoreboard && data.scoreboard.length > 0) {
           setScoreboard(data.scoreboard);
           setGameState('scoreboard');
           setNextQuestionTimer(4);
-          audioService.playNextQuestionSound();
           console.log('Scoreboard received via polling');
         }
       }
@@ -309,7 +251,7 @@ const GamePage = () => {
   // Final scoreboard fetch
   const fetchFinalScoreboard = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameCode}/scoreboard`, {
+      const response = await fetch(`${API_BASE_URL}/games/${gameCode}/scoreboard`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -328,11 +270,8 @@ const GamePage = () => {
   const submitAnswer = useCallback(async (answerIndex, timeSpent) => {
     if (!token || !currentQuestion) return;
 
-    // Click ses efekti
-    audioService.playClickSound();
-
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameCode}/answer`, {
+      const response = await fetch(`${API_BASE_URL}/games/${gameCode}/answer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -348,27 +287,17 @@ const GamePage = () => {
       if (response.ok) {
         const result = await response.json();
         
-        // Cevap sonucunu işle
         setCorrectAnswer(result.correctAnswer);
         setAnswerResult(result.isCorrect ? 'correct' : 'incorrect');
         setScoreGained(result.scoreGained || 0);
         setScore(result.newScore || score);
         setShowAnswerFeedback(true);
         
-        // Cevap sonucuna göre ses çal
-        if (result.isCorrect) {
-          audioService.playCorrectSound();
-        } else {
-          audioService.playWrongSound();
-        }
-        
-        // 2 saniye sonra scoreboard'a geç veya bekle
         setTimeout(() => {
           if (result.scoreboard) {
             setScoreboard(result.scoreboard);
             setGameState('scoreboard');
-            setNextQuestionTimer(4); // 4 saniye scoreboard göster
-            audioService.playNextQuestionSound();
+            setNextQuestionTimer(4);
           } else {
             setGameState('waiting');
           }
@@ -395,11 +324,8 @@ const GamePage = () => {
   const handleTimeout = useCallback(async () => {
     if (!token || !currentQuestion || selectedAnswer !== null) return;
 
-    // Zaman doldu ses efekti
-    audioService.playTimeUpSound();
-
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameCode}/answer`, {
+      const response = await fetch(`${API_BASE_URL}/games/${gameCode}/answer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -407,7 +333,7 @@ const GamePage = () => {
         },
         body: JSON.stringify({
           questionId: currentQuestion._id,
-          selectedAnswer: null, // Timeout
+          selectedAnswer: null,
           timeSpent: 15
         })
       });
@@ -426,7 +352,6 @@ const GamePage = () => {
             setScoreboard(result.scoreboard);
             setGameState('scoreboard');
             setNextQuestionTimer(4);
-            audioService.playNextQuestionSound();
           } else {
             setGameState('waiting');
           }
@@ -437,12 +362,12 @@ const GamePage = () => {
     }
   }, [token, currentQuestion, gameCode, score, selectedAnswer]);
 
-  // Move to next question (this would be triggered by Socket.IO in real implementation)
+  // Move to next question
   const moveToNextQuestion = useCallback(async () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameCode}/nextquestion`, {
+      const response = await fetch(`${API_BASE_URL}/games/${gameCode}/nextquestion`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -454,13 +379,9 @@ const GamePage = () => {
         const result = await response.json();
         
         if (result.finished) {
-          // Oyun bitti
           setGameState('finished');
           setScoreboard(result.finalScoreboard || scoreboard);
-          audioService.playGameEndSound();
-          audioService.stopBackgroundMusic();
         } else {
-          // Sonraki soru
           setCurrentQuestion(result.question);
           setQuestionIndex(result.questionIndex);
           setTimeLeft(result.question?.timeLimit || 15);
@@ -470,9 +391,6 @@ const GamePage = () => {
           setScoreGained(0);
           setShowAnswerFeedback(false);
           setGameState('question');
-          
-          // Yeni soru ses efekti
-          audioService.playNextQuestionSound();
         }
       }
     } catch (err) {
@@ -480,18 +398,11 @@ const GamePage = () => {
     }
   }, [token, gameCode, scoreboard]);
 
-  // Timer effect with sound
+  // Timer effect
   useEffect(() => {
     if (timeLeft > 0 && gameState === 'question' && selectedAnswer === null) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
-        
-        // Timer ses efektleri
-        if (timeLeft <= 5 && timeLeft > 1) {
-          audioService.playWarningSound(); // Son 5 saniyede uyarı sesi
-        } else if (timeLeft > 5 && timeLeft % 5 === 0) {
-          audioService.playTickSound(); // Her 5 saniyede tick sesi
-        }
       }, 1000);
       
       return () => clearTimeout(timer);
@@ -505,11 +416,6 @@ const GamePage = () => {
     if (nextQuestionTimer > 0 && gameState === 'scoreboard') {
       const timer = setTimeout(() => {
         setNextQuestionTimer(nextQuestionTimer - 1);
-        
-        // Geri sayım sesi (son 3 saniye)
-        if (nextQuestionTimer <= 3) {
-          audioService.playTickSound();
-        }
       }, 1000);
       
       return () => clearTimeout(timer);
@@ -537,7 +443,6 @@ const GamePage = () => {
   const getOptionClass = (index) => {
     let baseClass = `option-button ${getOptionColor(index)}`;
     
-    // Show correct/incorrect after answer is submitted
     if (showAnswerFeedback && correctAnswer !== null) {
       if (index === correctAnswer) {
         baseClass += ' correct-answer';
@@ -582,10 +487,7 @@ const GamePage = () => {
           <h2>Hata</h2>
           <p>{error}</p>
           <button 
-            onClick={() => {
-              audioService.playClickSound();
-              navigate('/dashboard');
-            }}
+            onClick={() => navigate('/dashboard')}
             className="back-button"
           >
             Dashboard'a Dön
@@ -602,9 +504,6 @@ const GamePage = () => {
     
     return (
       <div className="game-container">
-        {/* Audio Controls */}
-        <AudioControls showInGame={true} />
-        
         <div className="game-content">
           <div className="finished-container">
             <h1 className="finished-title">🎉 Oyun Bitti! 🎉</h1>
@@ -616,7 +515,6 @@ const GamePage = () => {
                   const playerId = player.userId._id || player.userId;
                   const playerUsername = player.username || 
                                        player.userId?.username || 
-                                       (typeof player.userId === 'object' ? player.userId.username : null) ||
                                        `Oyuncu ${index + 1}`;
                   
                   return (
@@ -643,10 +541,7 @@ const GamePage = () => {
             </div>
             
             <button 
-              onClick={() => {
-                audioService.playClickSound();
-                navigate('/dashboard');
-              }}
+              onClick={() => navigate('/dashboard')}
               className="back-to-dashboard"
             >
               Dashboard'a Dön
@@ -664,9 +559,6 @@ const GamePage = () => {
     
     return (
       <div className="game-container">
-        {/* Audio Controls */}
-        <AudioControls showInGame={true} />
-        
         <header className="game-header">
           <div className="header-left">
             <div className="game-title">QuizMaster</div>
@@ -702,7 +594,6 @@ const GamePage = () => {
                 const playerId = player.userId._id || player.userId;
                 const playerUsername = player.username || 
                                      player.userId?.username || 
-                                     (typeof player.userId === 'object' ? player.userId.username : null) ||
                                      `Oyuncu ${index + 1}`;
                 
                 return (
@@ -744,9 +635,6 @@ const GamePage = () => {
   if (gameState === 'waiting') {
     return (
       <div className="game-container">
-        {/* Audio Controls */}
-        <AudioControls showInGame={true} />
-        
         <header className="game-header">
           <div className="header-left">
             <div className="game-title">QuizMaster</div>
@@ -802,9 +690,6 @@ const GamePage = () => {
 
   return (
     <div className="game-container">
-      {/* Audio Controls */}
-      <AudioControls showInGame={true} />
-      
       <header className="game-header">
         <div className="header-left">
           <div className="game-title">QuizMaster</div>
@@ -841,11 +726,6 @@ const GamePage = () => {
             <button
               key={index}
               onClick={() => handleAnswerSelect(index)}
-              onMouseEnter={() => {
-                if (gameState === 'question' && timeLeft > 0 && selectedAnswer === null) {
-                  audioService.playHoverSound();
-                }
-              }}
               disabled={gameState !== 'question' || timeLeft === 0 || selectedAnswer !== null}
               className={getOptionClass(index)}
             >
@@ -863,7 +743,6 @@ const GamePage = () => {
           ))}
         </div>
 
-        {/* Answer Feedback */}
         {showAnswerFeedback && (
           <div className="answer-feedback show">
             <p className={`feedback-text ${answerResult}`}>
@@ -874,13 +753,6 @@ const GamePage = () => {
             {scoreGained > 0 && (
               <p className="score-gained">+{scoreGained.toLocaleString()} puan!</p>
             )}
-          </div>
-        )}
-
-        {/* Score Animation */}
-        {scoreGained > 0 && showAnswerFeedback && (
-          <div className="score-animation">
-            +{scoreGained.toLocaleString()} puan!
           </div>
         )}
 

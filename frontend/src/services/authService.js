@@ -1,15 +1,13 @@
-// src/services/authService.js
+// frontend/src/services/authService.js
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:5000/api/auth';
+import { API_BASE_URL } from '../config/api';
 
 const login = async (credentials) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/login`, credentials);
+    const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials);
 
     if (response.data && response.data.token) {
       localStorage.setItem('userToken', response.data.token);
-      // User bilgilerini de sakla (userId için gerekli)
       if (response.data.user) {
         localStorage.setItem('userData', JSON.stringify(response.data.user));
       }
@@ -24,7 +22,7 @@ const login = async (credentials) => {
 
 const register = async (userData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/register`, userData);
+    const response = await axios.post(`${API_BASE_URL}/auth/register`, userData);
     console.log('Registration successful:', response.data);
     return response.data;
   } catch (error) {
@@ -43,7 +41,6 @@ const getCurrentUserToken = () => {
   return localStorage.getItem('userToken');
 };
 
-// User bilgilerini al (userId için)
 const getCurrentUser = () => {
   const userDataString = localStorage.getItem('userData');
   try {
@@ -59,7 +56,7 @@ const authService = {
   register,
   logout,
   getCurrentUserToken,
-  getCurrentUser, // Yeni eklendi
+  getCurrentUser,
 };
 
 export default authService;

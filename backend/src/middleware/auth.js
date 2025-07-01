@@ -1,44 +1,61 @@
-// src/middleware/auth.js  <-- BU DOSYANIN YOLU VE ADI BU OLMALI
+// backend/src/middleware/auth.js
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const authMiddleware = async (req, res, next) => {
-    const authHeader = req.header('Authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Yetkilendirme başarısız: Token bulunamadı veya format yanlış.' });
-    }
-
-    const token = authHeader.substring(7); // 'Bearer ' kısmını at
-
     try {
+        const authHeader = req.header('Authorization');
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ 
+                message: 'Yetkilendirme başarısız: Token bulunamadı veya format yanlış.',
+                path: req.path 
+            });
+        }
+
+        const token = authHeader.substring(7);
+
         const JWT_SECRET = process.env.JWT_SECRET;
         if (!JWT_SECRET) {
-            console.error("JWT_SECRET .env dosyasında tanımlı değil! Middleware çalışmayacak.");
+            console.error("JWT_SECRET tanımlı değil!");
             return res.status(500).json({ message: "Sunucu yapılandırma hatası." });
         }
+
         const decoded = jwt.verify(token, JWT_SECRET);
 
-        // Token geçerliyse, payload'daki kullanıcı ID'sini request nesnesine ekleyelim.
-        // src/routes/auth.js'deki payload yapınız: { user: { id: '...' } }
-        // Bu yüzden decoded.user.id şeklinde erişiyoruz.
-        if (decoded && decoded.user && decoded.user.id) {
-            req.user = { id: decoded.user.id };
-        } else {
-            console.error('JWT Payload Hatası: Beklenen user.id bulunamadı.', decoded);
-            return res.status(401).json({ message: 'Yetkilendirme başarısız: Geçersiz token payload.' });
+        if (!decoded || !decoded.user || !decoded.user.id) {
+            console.error('JWT Payload Hatası:', decoded);
+            return res.status(401).json({ message: 'Geçersiz token payload.' });
         }
 
-        next(); // Her şey yolundaysa, sonraki middleware'e veya route handler'a geç
+        // Kullanıcı bilgilerini veritabanından al
+        const user = await User.findById(decoded.user.id).select('-password');
+        if (!user) {
+            return res.status(401).json({ message: 'Kullanıcı bulunamadı.' });
+        }
+
+        req.user = {
+            id: user._id.toString(),
+            username: user.username,
+            email: user.email
+        };
+
+        next();
     } catch (error) {
-        console.error('JWT Doğrulama Hatası:', error.message);
+        console.error('Auth middleware error:', error.message);
+        
         if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({ message: 'Yetkilendirme başarısız: Geçersiz token.' });
+            return res.status(401).json({ message: 'Geçersiz token.' });
         }
         if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: 'Yetkilendirme başarısız: Token süresi dolmuş.' });
+            return res.status(401).json({ message: 'Token süresi dolmuş.' });
         }
+        if (error.name === 'CastError') {
+            return res.status(401).json({ message: 'Geçersiz kullanıcı ID.' });
+        }
+        
         res.status(401).json({ message: 'Yetkilendirme başarısız.' });
     }
 };
 
-module.exports = authMiddleware; // Middleware fonksiyonunu export et
+module.exports = authMiddleware;
