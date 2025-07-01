@@ -1,4 +1,4 @@
-// backend/src/index.js
+// backend/src/index.js - Improved with better MongoDB error handling
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -13,38 +13,35 @@ const server = http.createServer(app);
 const isProduction = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration for production
+console.log('🚀 Starting Kahoot Clone API...');
+console.log('Environment:', isProduction ? 'production' : 'development');
+
+// CORS configuration
 const allowedOrigins = [
     'http://localhost:3000',
     'https://localhost:3000',
-    'https://quizmaster-chi.vercel.app',
-    // Vercel otomatik URL'leri için wildcard pattern
+    'https://kahoot-v2.vercel.app',
+    'https://kahoot-v2-veysibeyazs-projects.vercel.app',
     /https:\/\/.*\.vercel\.app$/
 ];
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Development'ta origin olmayabilir (Postman vs.)
-        if (!origin && !isProduction) return callback(null, true);
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
         
-        // Production'da Vercel domain'lerini otomatik kabul et
+        // Allow Vercel domains
         if (origin && origin.includes('vercel.app')) {
             return callback(null, true);
         }
         
-        // Allowed origins listesini kontrol et
         const isAllowed = allowedOrigins.some(allowed => {
             if (typeof allowed === 'string') return allowed === origin;
             if (allowed instanceof RegExp) return allowed.test(origin);
             return false;
         });
         
-        if (isAllowed || !isProduction) {
-            callback(null, true);
-        } else {
-            console.log('CORS blocked:', origin);
-            callback(new Error('CORS policy violation'), false);
-        }
+        callback(null, isAllowed || !isProduction);
     },
     credentials: true
 }));
@@ -61,13 +58,10 @@ const io = socketIo(server, {
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Trust proxy for Vercel
 app.set('trust proxy', 1);
-
-// Socket.IO setup
 app.set('io', io);
 
+// Socket.IO setup
 io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
 
@@ -90,14 +84,18 @@ io.on('connection', (socket) => {
     });
 });
 
-// Health check endpoint
+// Health check endpoint (MongoDB bağımsız)
 app.get('/api/health', (req, res) => {
-    res.json({ 
+    const health = {
         status: 'OK',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        version: '1.0.0'
-    });
+        version: '1.0.0',
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    };
+    
+    console.log('Health check:', health);
+    res.json(health);
 });
 
 // Root endpoint
@@ -116,6 +114,24 @@ app.get('/', (req, res) => {
     });
 });
 
+// Test route - MongoDB bağımsız
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        message: 'Backend çalışıyor!',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+    });
+});
+
+app.get('/api', (req, res) => {
+    res.json({ 
+        message: 'Kahoot Clone API',
+        status: 'online',
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+        version: '1.0.0'
+    });
+});
+
 // Import routes with error handling
 try {
     const authRoutes = require('./routes/auth');
@@ -128,8 +144,10 @@ try {
     app.use('/api/quizzes', quizRoutes);
     app.use('/api/users', userRoutes);
     app.use('/api/games', gameRoutes);
+    
+    console.log('✅ Routes loaded successfully');
 } catch (error) {
-    console.error('Route loading error:', error);
+    console.error('❌ Route loading error:', error);
 }
 
 // 404 handler for API routes
@@ -143,38 +161,60 @@ app.use('/api/*', (req, res) => {
 
 // Global error handler
 app.use((error, req, res, next) => {
-    console.error('Global error:', {
-        message: error.message,
-        stack: isProduction ? undefined : error.stack,
-        path: req.path,
-        method: req.method
-    });
+    console.error('Global error:', error.message);
     
     res.status(500).json({ 
         message: 'Internal server error',
-        ...(isProduction ? {} : { error: error.message })
+        error: isProduction ? 'Internal server error' : error.message
     });
 });
 
-// MongoDB connection
+// MongoDB connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI;
+
+console.log('🔌 MongoDB URI configured:', MONGODB_URI ? 'Yes' : 'No');
 
 if (MONGODB_URI) {
     mongoose.connect(MONGODB_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
     })
     .then(() => {
-        console.log('MongoDB connected successfully');
-        if (!isProduction) {
-            console.log('Database:', MONGODB_URI.replace(/\/\/.*:.*@/, '//***:***@'));
-        }
+        console.log('✅ MongoDB connected successfully');
+        console.log('Database name:', mongoose.connection.name);
     })
     .catch(err => {
-        console.error('MongoDB connection error:', err.message);
+        console.error('❌ MongoDB connection error:', err.message);
+        
+        // MongoDB hata türlerine göre detaylı log
+        if (err.message.includes('authentication failed')) {
+            console.error('🔑 Authentication failed - Check username/password');
+        }
+        if (err.message.includes('not allowed to connect')) {
+            console.error('🌐 IP not whitelisted - Check Network Access in MongoDB Atlas');
+        }
+        if (err.message.includes('ENOTFOUND')) {
+            console.error('🔗 Cluster not found - Check cluster URL');
+        }
+    });
+
+    // MongoDB connection events
+    mongoose.connection.on('error', (err) => {
+        console.error('MongoDB connection error:', err);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+        console.log('MongoDB disconnected');
+    });
+
+    mongoose.connection.on('reconnected', () => {
+        console.log('MongoDB reconnected');
     });
 } else {
-    console.warn('Warning: MONGODB_URI not configured');
+    console.warn('⚠️  MongoDB URI not provided - database features will not work');
 }
 
 // Graceful shutdown
@@ -199,7 +239,9 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    process.exit(1);
+    if (isProduction) {
+        process.exit(1);
+    }
 });
 
 // Export for Vercel
@@ -208,9 +250,7 @@ module.exports = app;
 // Start server only in development
 if (require.main === module && !isProduction) {
     server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+        console.log(`🚀 Server running on port ${PORT}`);
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 }
-// Export for Vercel - bu satır dosyanın en sonunda olmalı
-module.exports = app;
